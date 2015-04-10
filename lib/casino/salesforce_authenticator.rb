@@ -3,11 +3,7 @@ require 'unix_crypt'
 require 'bcrypt'
 require 'phpass'
 
-class CASino::ActiveRecordAuthenticator
-
-  class AuthDatabase < ::ActiveRecord::Base
-    self.abstract_class = true
-  end
+class CASino::SalesforceAuthenticator
 
   # @param [Hash] options
   def initialize(options)
@@ -15,30 +11,19 @@ class CASino::ActiveRecordAuthenticator
       raise ArgumentError, "When assigning attributes, you must pass a hash as an argument."
     end
     @options = options.deep_symbolize_keys
-    raise ArgumentError, "Table name is missing" unless @options[:table]
-    if @options[:model_name]
-      model_name = @options[:model_name]
-    else
-      model_name = @options[:table]
-      if @options[:connection][:database]
-        model_name = "#{@options[:connection][:database].gsub(/[^a-zA-Z]+/, '')}_#{model_name}"
-      end
-      model_name = model_name.classify
-    end
-    model_class_name = "#{self.class.to_s}::#{model_name}"
-    eval <<-END
-      class #{model_class_name} < AuthDatabase
-        self.table_name = "#{@options[:table]}"
-        self.inheritance_column = :_type_disabled
-      end
-    END
-
-    @model = model_class_name.constantize
-    @model.establish_connection @options[:connection]
+    raise ArgumentError, "Connection info is missing" unless @options[:connection]
+    @client = Databasedotcom::Client.new(
+      :client_id => @options[:connection][:client_id],
+      :client_secret => @options[:connection][:client_secret],
+      :verify_client => OpenSSL::SSL::VERIFY_NONE)
+    @token = @client.authenticate(
+      :username => @options[:connection][:username],
+      :password => @options[:connection][:password])
+    @model = @client.materialize(@options[:sobject] || 'Contact')
   end
 
   def validate(username, password)
-    user = @model.send("find_by_#{@options[:username_column]}!", username)
+    user = @model.send("find_by_#{@options[:username_column]}", username)
     password_from_database = user.send(@options[:password_column])
 
     if valid_password?(password, password_from_database)
@@ -47,14 +32,14 @@ class CASino::ActiveRecordAuthenticator
       false
     end
 
-  rescue ActiveRecord::RecordNotFound
+  rescue Databasedotcom::SalesForceError
     false
   end
 
   def load_user_data(username)
-    user = @model.send("find_by_#{@options[:username_column]}!", username)
+    user = @model.send("find_by_#{@options[:username_column]}", username)
     user_data(user)
-  rescue ActiveRecord::RecordNotFound
+  rescue Databasedotcom::SalesForceError
     nil
   end
 
@@ -64,16 +49,17 @@ class CASino::ActiveRecordAuthenticator
   end
 
   def valid_password?(password, password_from_database)
-    return false if password_from_database.blank?
-    magic = password_from_database.split('$')[1]
-    case magic
-    when /\A2a?\z/
-      valid_password_with_bcrypt?(password, password_from_database)
-    when /\AH\z/, /\AP\z/
-      valid_password_with_phpass?(password, password_from_database)
-    else
-      valid_password_with_unix_crypt?(password, password_from_database)
-    end
+    password == password_from_database
+    # return false if password_from_database.blank?
+    # magic = password_from_database.split('$')[1]
+    # case magic
+    # when /\A2a?\z/
+    #   valid_password_with_bcrypt?(password, password_from_database)
+    # when /\AH\z/, /\AP\z/
+    #   valid_password_with_phpass?(password, password_from_database)
+    # else
+    #   valid_password_with_unix_crypt?(password, password_from_database)
+    # end
   end
 
   def valid_password_with_bcrypt?(password, password_from_database)

@@ -1,32 +1,28 @@
-# casino-activerecord_authenticator [![Build Status](https://travis-ci.org/rbCAS/casino-activerecord_authenticator.png?branch=master)](https://travis-ci.org/rbCAS/casino-activerecord_authenticator) [![Coverage Status](https://coveralls.io/repos/rbCAS/casino-activerecord_authenticator/badge.png)](https://coveralls.io/r/rbCAS/casino-activerecord_authenticator)
+# casino-salesforce_authenticator [![Build Status](https://travis-ci.org/rbCAS/casino-salesforce_authenticator.png?branch=master)](https://travis-ci.org/rbCAS/casino-salesforce_authenticator) [![Coverage Status](https://coveralls.io/repos/rbCAS/casino-salesforce_authenticator/badge.png)](https://coveralls.io/r/rbCAS/casino-salesforce_authenticator)
 
-Provides mechanism to use ActiveRecord as an authenticator for [CASino](https://github.com/rbCAS/CASino).
+Provides mechanism to use Salesforce as an authenticator for [CASino](https://github.com/rbCAS/CASino).
 
-ActiveRecord supports many SQL databases such as MySQL, PostgreSQL, SQLite, ...
-
-To use the ActiveRecord authenticator, configure it in your cas.yml:
+To use the Salesforce authenticator, configure it in your cas.yml:
 
     authenticators:
       my_company_sql:
-        authenticator: "ActiveRecord"
-        options:
-          connection:
-            adapter: "mysql2"
-            host: "localhost"
-            username: "casino"
-            password: "secret"
-            database: "users"
-          table: "users"
-          username_column: "username"
-          password_column: "password"
-          pepper: "suffix of the password"            # optional
-          extra_attributes:
-            email: "email_database_column"
-            fullname: "displayname_database_column"
+        authenticator: "Salesforce"
+      options:
+        connection:
+          client_id: "xxx"
+          client_secret: "123"
+          username: "you@example.com"
+          password: "zzz"
+        sobject: "Contact"
+        username_column: "Email"
+        password_column: "Password"
+        extra_attributes:
+          first_name: "FirstName"
+          last_name: "LastName"
 
 Configuration examples for the `connection` part for other databases can be found [here](https://gist.github.com/erichurst/961978).
 
-## Contributing to casino-activerecord_authenticator
+## Contributing to casino-salesforce_authenticator
 
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.
@@ -38,6 +34,6 @@ Configuration examples for the `connection` part for other databases can be foun
 
 ## Copyright
 
-Copyright (c) 2013 Nils Caspar. See LICENSE.txt
+Copyright (c) 2013 Nils Caspar, 2015 Steve Friedman. See LICENSE.txt
 for further details.
 
