@@ -4,6 +4,7 @@ require 'bcrypt'
 require 'phpass'
 
 class CASino::SalesforceAuthenticator
+  attr_accessor :error, :options, :client, :model, :token if Rails.env.development?
 
   # @param [Hash] options
   def initialize(options)
@@ -13,6 +14,7 @@ class CASino::SalesforceAuthenticator
     @options = options.deep_symbolize_keys
     raise ArgumentError, "Connection info is missing" unless @options[:connection]
     @client = Databasedotcom::Client.new(
+      :host => @options[:connection][:host],
       :client_id => @options[:connection][:client_id],
       :client_secret => @options[:connection][:client_secret],
       :verify_client => OpenSSL::SSL::VERIFY_NONE)
@@ -20,6 +22,12 @@ class CASino::SalesforceAuthenticator
       :username => @options[:connection][:username],
       :password => @options[:connection][:password])
     @model = @client.materialize(@options[:sobject] || 'Contact')
+  rescue Databasedotcom::SalesForceError => sf_error
+    @error = sf_error
+  end
+
+  def error
+    @error
   end
 
   def validate(username, password)
@@ -31,15 +39,16 @@ class CASino::SalesforceAuthenticator
     else
       false
     end
-
-  rescue Databasedotcom::SalesForceError
+  rescue Databasedotcom::SalesForceError => sf_error
+    @error = sf_error
     false
   end
 
   def load_user_data(username)
     user = @model.send("find_by_#{@options[:username_column]}", username)
     user_data(user)
-  rescue Databasedotcom::SalesForceError
+  rescue Databasedotcom::SalesForceError => sf_error
+    @error = sf_error
     nil
   end
 
