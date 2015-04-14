@@ -1,4 +1,4 @@
-# casino-salesforce_authenticator [![Build Status](https://travis-ci.org/rbCAS/casino-salesforce_authenticator.png?branch=master)](https://travis-ci.org/rbCAS/casino-salesforce_authenticator) [![Coverage Status](https://coveralls.io/repos/rbCAS/casino-salesforce_authenticator/badge.png)](https://coveralls.io/r/rbCAS/casino-salesforce_authenticator)
+# casino-salesforce_authenticator
 
 Provides mechanism to use Salesforce as an authenticator for [CASino](https://github.com/rbCAS/CASino).
 
