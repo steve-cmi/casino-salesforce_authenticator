@@ -26,10 +26,6 @@ class CASino::SalesforceAuthenticator
     @error = sf_error
   end
 
-  def error
-    @error
-  end
-
   def validate(username, password)
     user = @model.send("find_by_#{@options[:username_column]}", username)
     password_from_database = user.send(@options[:password_column])
